@@ -96,16 +96,20 @@ button {
 	border: 1px solid #ccc;
 }
 .swiper-wrapper .swiper-slide {
+	display: -webkit-box; /* Android 2.1 ~ 4.3, ios 6-, safari 3.1-6 */
+    display: -moz-box; /* Firefox 19- */
+    display: -ms-flexbox; /* IE10 */
+    display: -webkit-flex; /* Chrome */
+    display: flex;
 	height: 100%;
 	transition: transform 0.3s ease;
-} 
-.swiper-wrapper .swiper-slide:after {
-	display: block;
-	clear: both;
-	content: '';
-} 
+}
 .swiper-wrapper .swiper-slide .item-page {
-	float: left;
+	-webkit-box-flex: 1; /* Android 2.1 ~ 4.3, ios 6-, safari 3.1-6 */
+    -moz-box-flex: 1; /* Firefox 19- */
+    -ms-flex: 1; /* IE10 */
+    -webkit-flex: 1; /* Chrome */
+    flex: 1;
 }
 .img-banner {
 	display: block;

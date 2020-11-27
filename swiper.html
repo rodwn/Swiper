@@ -63,7 +63,7 @@
 				container: this.root.querySelector('.swiper-slide')
 			};
 			this.index = 0;
-			this.contentWidth = this.el.container.offsetWidth;
+			this.contentWidth = this.el.container.parentElement.offsetWidth;
 			this.optionAPI = {
 				loop: false,
 				activeClass: 'active'
@@ -107,7 +107,6 @@
 
 			pagingItems[pagingIndex].classList.remove(activeClass);
 			pagingItems[index].classList.add(activeClass);
-
 			this.excuteAnimate();
 		}
 		Swiper.prototype.excuteAnimate = function () {
@@ -159,8 +158,6 @@
 			});
 
 			target.classList.add(activeClass);
-
-
 			this.setIndex();
 			this.excuteAnimate();
 		}
