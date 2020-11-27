@@ -1,0 +1,186 @@
+<html lang="en">
+<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>Swiper</title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+		<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<div class="swiper-wrapper" id="swiper01">
+		<div class="swiper-container">
+			<ul class="swiper-slide">
+				<li class="item-page">
+					<a href="#none">
+						<img src="https://i.ibb.co/VMJLv0X/img1.jpg" alt="첫 번째 배너" class="img-banner">
+					</a>
+				</li>
+				<li class="item-page">
+					<a href="#none">
+						<img src="https://i.ibb.co/fkrtjJH/img2.jpg" alt="두 번째 배너" class="img-banner">
+					</a>
+				</li>
+				<li class="item-page">
+					<a href="#none">
+						<img src="https://i.ibb.co/8BwFQZq/img3.jpg" alt="세 번째 배너" class="img-banner">
+					</a>
+				</li>
+				<li class="item-page">
+					<a href="#none">
+						<img src="https://i.ibb.co/bmC2bzz/img4.jpg" alt="네 번째 배너" class="img-banner">
+					</a>
+				</li>
+			</ul>
+			<button type="button" class="prev"><span class="blind">이전페이지</span></button>
+			<button type="button" class="next"><span class="blind">다음페이지</span></button>
+			<ul class="indicator">
+				<li class="item-pagination">
+					<button type="button">1페이지</button>
+				</li>
+				<li class="item-pagination active">
+					<button type="button">2페이지</button>
+				</li>
+				<li class="item-pagination">
+					<button type="button">3페이지</button>
+				</li>
+				<li class="item-pagination">
+					<button type="button">4페이지</button>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<script>
+		function Swiper (selector, optionObj) {
+			if (!selector) {
+				throw 'missing selector';
+			}
+			this.root = document.querySelector(selector);
+			this.el = {
+				pagingItems: Array.prototype.slice.call(this.root.querySelectorAll('.indicator .item-pagination')),
+				prevButton: this.root.querySelector('.prev'),
+				nextButton: this.root.querySelector('.next'),
+				container: this.root.querySelector('.swiper-slide')
+			};
+			this.index = 0;
+			this.contentWidth = this.el.container.offsetWidth;
+			this.optionAPI = {
+				loop: false,
+				activeClass: 'active'
+			};
+
+			Object.assign(this.optionAPI, optionObj);
+			this.init();
+		}	
+		Swiper.prototype.setIndex = function () {
+			const {pagingItems} = this.el;
+			const {activeClass} = this.optionAPI;
+			const hasActiveClass = pagingItems.some((v, i) => {
+				if (v.classList.contains(activeClass)) {
+					this.index = i;
+
+					return true;
+				}
+			});
+
+			if (!hasActiveClass) {
+				pagingItems[0].classList.add(activeClass)
+			}
+		}
+		Swiper.prototype.setWidth = function () {
+			const {container} = this.el;
+
+			container.style.width = this.contentWidth * container.childElementCount;
+			Array.from(container.children).forEach(v => {
+				v.style.width = this.contentWidth;
+			});
+		}
+		Swiper.prototype.setPaging = function (idx) {
+			const {pagingItems} = this.el;
+			const index = idx || this.index;
+			const {activeClass} = this.optionAPI;
+			const pagingIndex = pagingItems.findIndex(v => v.classList.contains(activeClass));
+
+			if (index === pagingIndex) {
+				return false;
+			}
+
+			pagingItems[pagingIndex].classList.remove(activeClass);
+			pagingItems[index].classList.add(activeClass);
+
+			this.excuteAnimate();
+		}
+		Swiper.prototype.excuteAnimate = function () {
+			const _this = this;
+			_this.el.container.style.transform = `translate3d(-${_this.contentWidth * _this.index}px, 0px, 0px)`;
+		}
+		Swiper.prototype.prevNextButtonClickhandler = function (e) {
+			const {pagingItems} = this.el;
+			const {loop} = this.optionAPI;
+			const index = this.index;
+			const target = e.target;
+			const pagingLength = pagingItems.length;
+			
+			if (target.className === 'prev') {
+				if (index > 0) {
+					this.index -= 1;
+				} else if (loop) {
+					this.index = pagingLength - 1;
+				} else {
+					return false;
+				}
+			} else {
+				if (index < pagingLength - 1) {
+					this.index += 1;
+				} else if (loop) {
+					this.index = 0;
+				} else {
+					return false;
+				}
+			}
+
+			this.setPaging();
+		}
+		Swiper.prototype.pagingClickHandler = function (e) {
+			const target = e.target.parentElement;
+			const {pagingItems} = this.el;
+			const {activeClass} = this.optionAPI;
+			
+			if (target.classList.contains(activeClass)) {
+				return false;
+			}
+
+			pagingItems.some((v) => {
+				if (v.classList.contains(activeClass)) {
+					v.classList.remove(activeClass)
+
+					return true;
+				}
+			});
+
+			target.classList.add(activeClass);
+
+
+			this.setIndex();
+			this.excuteAnimate();
+		}
+		Swiper.prototype.init = function () {
+			const {prevButton, nextButton, pagingItems} = this.el;
+			const bindingPrevNextButtonClickhandler = this.prevNextButtonClickhandler.bind(this);
+			const bindingpagingClickHandler = this.pagingClickHandler.bind(this);
+
+			pagingItems[0].parentElement.addEventListener('click', bindingpagingClickHandler);
+			prevButton.addEventListener('click', bindingPrevNextButtonClickhandler);
+			nextButton.addEventListener('click', bindingPrevNextButtonClickhandler);
+
+			this.setIndex();
+			this.setWidth();
+		}
+	</script>
+	<script>
+		const mySwiper = new Swiper('#swiper01', {
+			loop: false
+		});
+	</script>
+</body>
+</html>
