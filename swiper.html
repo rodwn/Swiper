@@ -38,18 +38,19 @@
 				<li class="item-pagination">
 					<button type="button">1페이지</button>
 				</li>
-				<li class="item-pagination active">
+				<li class="item-pagination">
 					<button type="button">2페이지</button>
 				</li>
 				<li class="item-pagination">
 					<button type="button">3페이지</button>
 				</li>
-				<li class="item-pagination">
+				<li class="item-pagination active">
 					<button type="button">4페이지</button>
 				</li>
 			</ul>
 		</div>
 	</div>
+	<div class="test" style="width: 100px; height:100px; border:1px solid; user-select:none;position:absolute; left: 50px; top: 400px">가나다라</div>
 	<script>
 		function Swiper (selector, optionObj) {
 			if (!selector) {
@@ -64,17 +65,83 @@
 			};
 			this.index = 0;
 			this.contentWidth = this.el.container.parentElement.offsetWidth;
-			this.optionAPI = {
+			this.option = {
 				loop: false,
 				activeClass: 'active'
 			};
 
-			Object.assign(this.optionAPI, optionObj);
+			Object.assign(this.option, optionObj);
 			this.init();
-		}	
+		}
+		Swiper.prototype.touchable = function () {
+			const swiper = this;
+			const {pagingItems, container} = swiper.el;
+			const {loop} = swiper.option;
+			const getTranslateX = () => this.el.container.style.transform.match(/\-?\d+(?=px)/) * 1;
+
+			container.onmousedown = function (e) {
+				e.preventDefault();
+				const downPageX = e.pageX;
+				const downTranslateX = getTranslateX();
+				const timeStamp = Date.now();
+				
+				document.onmousemove = function (e) {
+					const movePageX = e.pageX;
+					
+					container.style.transform = `translate3d(${downTranslateX + (movePageX - downPageX)}px, 0px, 0px)`;
+					container.style.transitionDuration = '0s';
+					
+					this.onmouseup = function (e) {
+						const upTranslateX = getTranslateX();
+						const movingDistance = downPageX - e.pageX;
+						const timeDiff = (Date.now() - timeStamp) / 1000;
+
+						this.onmousemove = null;
+						this.onmouseup = null;
+
+						timeDiff > 0.3 ? leisureSwipe(movingDistance) : instantSwipe(movingDistance)
+					};
+				};
+
+				this.onmouseup = function () {
+					document.onmousemove = null;
+				}
+			};
+
+			function instantSwipe (distance) {
+				switch (Math.sign(distance)) {
+					case 1:
+						swiper.index === pagingItems.length - 1 ? loop ? swiper.index = 0 : null : swiper.index += 1;
+						break;
+					case -1:
+						swiper.index === 0 ? loop ? swiper.index = pagingItems.length - 1 : null : swiper.index -= 1;
+						break;
+					default:
+						return false;
+				}
+
+				swiper.setPaging();
+				swiper.excuteSwipe();
+			}
+
+			function leisureSwipe (distance) {
+				let isNext = true;
+				const indexToMove = Math.round(Math.abs(distance) / swiper.contentWidth);
+
+				if (Math.sign(distance) < 0) {
+					isNext = false;
+				}
+
+				isNext ? swiper.index === pagingItems.length - 1 ? null : swiper.index += indexToMove : swiper.index === 0 ? null : swiper.index -= indexToMove
+
+				swiper.setPaging();
+				swiper.excuteSwipe();
+			}
+		};
+
 		Swiper.prototype.setIndex = function () {
 			const {pagingItems} = this.el;
-			const {activeClass} = this.optionAPI;
+			const {activeClass} = this.option;
 			const hasActiveClass = pagingItems.some((v, i) => {
 				if (v.classList.contains(activeClass)) {
 					this.index = i;
@@ -84,9 +151,10 @@
 			});
 
 			if (!hasActiveClass) {
-				pagingItems[0].classList.add(activeClass)
+				pagingItems[0].classList.add(activeClass);
 			}
-		}
+		};
+
 		Swiper.prototype.setWidth = function () {
 			const {container} = this.el;
 
@@ -94,28 +162,27 @@
 			Array.from(container.children).forEach(v => {
 				v.style.width = this.contentWidth;
 			});
-		}
+		};
+
 		Swiper.prototype.setPaging = function (idx) {
 			const {pagingItems} = this.el;
 			const index = idx || this.index;
-			const {activeClass} = this.optionAPI;
+			const {activeClass} = this.option;
 			const pagingIndex = pagingItems.findIndex(v => v.classList.contains(activeClass));
-
-			if (index === pagingIndex) {
-				return false;
-			}
 
 			pagingItems[pagingIndex].classList.remove(activeClass);
 			pagingItems[index].classList.add(activeClass);
-			this.excuteAnimate();
-		}
-		Swiper.prototype.excuteAnimate = function () {
+		};
+
+		Swiper.prototype.excuteSwipe = function () {
 			const _this = this;
 			_this.el.container.style.transform = `translate3d(-${_this.contentWidth * _this.index}px, 0px, 0px)`;
-		}
+			_this.el.container.style.transitionDuration = '0.3s';
+		};
+
 		Swiper.prototype.prevNextButtonClickhandler = function (e) {
 			const {pagingItems} = this.el;
-			const {loop} = this.optionAPI;
+			const {loop} = this.option;
 			const index = this.index;
 			const target = e.target;
 			const pagingLength = pagingItems.length;
@@ -139,11 +206,13 @@
 			}
 
 			this.setPaging();
-		}
+			this.excuteSwipe();
+		};
+
 		Swiper.prototype.pagingClickHandler = function (e) {
 			const target = e.target.parentElement;
 			const {pagingItems} = this.el;
-			const {activeClass} = this.optionAPI;
+			const {activeClass} = this.option;
 			
 			if (target.classList.contains(activeClass)) {
 				return false;
@@ -159,8 +228,9 @@
 
 			target.classList.add(activeClass);
 			this.setIndex();
-			this.excuteAnimate();
-		}
+			this.excuteSwipe();
+		};
+
 		Swiper.prototype.init = function () {
 			const {prevButton, nextButton, pagingItems} = this.el;
 			const bindingPrevNextButtonClickhandler = this.prevNextButtonClickhandler.bind(this);
@@ -170,14 +240,32 @@
 			prevButton.addEventListener('click', bindingPrevNextButtonClickhandler);
 			nextButton.addEventListener('click', bindingPrevNextButtonClickhandler);
 
+			this.touchable();
 			this.setIndex();
 			this.setWidth();
-		}
+			this.excuteSwipe();
+		};
 	</script>
 	<script>
 		const mySwiper = new Swiper('#swiper01', {
 			loop: false
 		});
+		const target = document.querySelector('.test');
+
+		target.onmousedown = function (e) {
+			const diffX = e.clientX - target.offsetLeft;
+			const diffY = e.clientY - target.offsetTop;
+			
+			document.onmousemove = function (e) {
+			
+				target.style.left = `${e.pageX - diffX}px`;
+				target.style.top = `${e.pageY - diffY}px`;
+			}
+
+			target.onmouseup = function () {
+				document.onmousemove = null;
+			}
+		}
 	</script>
 </body>
 </html>

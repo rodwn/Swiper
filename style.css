@@ -103,18 +103,21 @@ button {
     display: flex;
 	height: 100%;
 	transition: transform 0.3s ease;
+	user-select: none;
 }
 .swiper-wrapper .swiper-slide .item-page {
 	-webkit-box-flex: 1; /* Android 2.1 ~ 4.3, ios 6-, safari 3.1-6 */
     -moz-box-flex: 1; /* Firefox 19- */
     -ms-flex: 1; /* IE10 */
     -webkit-flex: 1; /* Chrome */
-    flex: 1;
+	flex: 1;
+	user-select: none;
 }
 .img-banner {
 	display: block;
 	width: 100%;
 	height: 100%;
+	user-select: none;
 }
 .pagination:after {
 	display: block;
